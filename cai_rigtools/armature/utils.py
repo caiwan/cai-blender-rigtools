@@ -12,14 +12,22 @@ def get_armature_objects():
 
 
 def get_armature(armature_name=None):
-    if not armature_name and bpy.context.object.type == "ARMATURE":
-        return bpy.context.object
+    armature_obj = bpy.context.view_layer.objects.active
+    if not armature_name and armature_obj.type == "ARMATURE":
+        return armature_obj
 
     for obj in get_armature_objects():
         if obj.name == armature_name:
             return obj
 
     return None
+
+
+def get_selected_bones(armature_obj) -> List[str]:
+    # TODO: Should be queried from the armature object.
+    # return [bone for bone in armature_obj.data.bones if bone.select]
+    return [bone.name for bone in bpy.context.selected_bones]
+
 
 
 def select_bones(armature, bone_names: List[str], clear_selection: bool = True):

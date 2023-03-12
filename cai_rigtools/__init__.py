@@ -14,6 +14,7 @@ from .operators import (
     CreateBoneChainLeverMechanism,
     CreateTailChainMechanism,
     CreateTentacleChainMechanism,
+    BulkToggleDeformation,
 )
 
 # ------ Menu
@@ -28,18 +29,19 @@ class MY_MT_RigToolArmatureMenu(bpy.types.Menu):
     def draw(self, context):
         for clazz in [
             CreateTargetForArmature,
+            BulkToggleDeformation,
             None,
             CreateBoneChainLeverMechanism,
             CreateTailChainMechanism,
             CreateTentacleChainMechanism,
-            None, 
+            None,
             MirrorBones,
         ]:
             if clazz is None:
                 self.layout.separator()
             else:
                 self.layout.operator(clazz.bl_idname, text=clazz.bl_label)
-        self.layout.separator()
+        # self.layout.separator()
 
 
 class MY_MT_RigToolPoseMenu(bpy.types.Menu):
@@ -47,10 +49,15 @@ class MY_MT_RigToolPoseMenu(bpy.types.Menu):
     bl_label = "Rig Tools"
 
     def draw(self, context):
-
-        self.layout.operator(
-            ClearAllConstraints.bl_idname, text=ClearAllConstraints.bl_label
-        )
+        for clazz in [
+            ClearAllConstraints,
+            BulkToggleDeformation,
+        ]:
+            if clazz is None:
+                self.layout.separator()
+            else:
+                self.layout.operator(clazz.bl_idname, text=clazz.bl_label)
+        # self.layout.separator()
 
 
 def draw_armature_menu(self, context):
@@ -74,6 +81,7 @@ classes = [
     CreateBoneChainLeverMechanism,
     CreateTailChainMechanism,
     CreateTentacleChainMechanism,
+    BulkToggleDeformation,
 ]
 
 
