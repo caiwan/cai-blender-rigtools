@@ -6,6 +6,8 @@ from .armature import (
     find_pose_bone,
     find_edit_bone,
     select_bones,
+    assign_bone_layer_name,
+    move_bones_to_layer,
     create_lever_mechanism,
     create_target_armature,
     create_tail_mechanism,
@@ -46,11 +48,7 @@ class ClearAllConstraints(BaseOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        if not all(
-            [
-                self._find_selected_bones(),
-            ]
-        ):
+        if not self._find_selected_bones():
             return {"CANCELLED"}
 
         fail = 0
@@ -76,11 +74,11 @@ class ClearAllConstraints(BaseOperator):
 
 class BulkToggleDeformation(BaseOperator):
     """
-    Clear all constraints from selected bones
+    Toggle deformation of selected bones
     """
 
     bl_idname = "rigtools.bulk_set_deformation_bone"
-    bl_label = "Turn all deformations on or off"
+    bl_label = "Toggle deformation of selected bones"
     bl_options = {"REGISTER", "UNDO"}
 
     use_deform: bpy.props.BoolProperty(
@@ -89,16 +87,13 @@ class BulkToggleDeformation(BaseOperator):
     )
 
     def execute(self, context):
-        if not all(
-            [
-                self._find_selected_bones(),
-            ]
-        ):
+        if not self._find_selected_bones():
             return {"CANCELLED"}
 
         for bone_name in self.selected_bones:
             bone = find_edit_bone(self.armature, bone_name)
-            bone.use_deform = self.use_deform
+            if bone:        
+                bone.use_deform = self.use_deform
 
         return {"FINISHED"}
 
@@ -113,11 +108,7 @@ class MirrorBones(BaseOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        if not all(
-            [
-                self._find_selected_bones(),
-            ]
-        ):
+        if not self._find_selected_bones():
             return {"CANCELLED"}
 
         fail = 0
@@ -157,17 +148,18 @@ class CreateTargetForArmature(BaseOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        if not all(
-            [
-                self._find_armature(),
-                self._find_selected_bones(),
-            ]
-        ):
+        if not self._find_selected_bones():
             return {"CANCELLED"}
 
-        created_bones = create_target_armature(self.armature, self.selected_bones)
+        # TODO: Prefix as property
+        prefix = "TGT"
+
+        created_bones = create_target_armature(self.armature, self.selected_bones, prefix)
+        target_layer_id = assign_bone_layer_name(self.armature, prefix)
+        move_bones_to_layer(self.armature, created_bones, target_layer_id)
         select_bones(self.armature, created_bones)
-        self.report({"INFO"}, f"{len(created_bones)} bones had been or updated.")
+
+        self.report({"INFO"}, f"{len(created_bones)} bones had been created or updated.")
 
         return {"FINISHED"}
 
@@ -182,16 +174,11 @@ class CreateBoneChainLeverMechanism(BaseOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        # TODO: Use Names only
-        selected_bones = [o.name for o in bpy.context.selected_bones if o.select]
-
-        if not selected_bones:
-            self.report({"ERROR"}, "Cannot preform operation, no bones selected")
-            return {"FINISHED"}
-
-        armature = get_armature()
-        created_bones = create_lever_mechanism(armature, selected_bones)
-        select_bones(armature, created_bones)
+        if not self._find_selected_bones():
+            return {"CANCELLED"}
+        
+        created_bones = create_lever_mechanism(self.armature, self.selected_bones)
+        select_bones(self.armature, created_bones)
 
         self.report(
             {"INFO"}, f"{len(created_bones)} bones had been created or updated."
@@ -210,16 +197,11 @@ class CreateTailChainMechanism(BaseOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        # TODO: Use Names only
-        selected_bones = [o.name for o in bpy.context.selected_bones if o.select]
-
-        if not selected_bones:
-            self.report({"ERROR"}, "Cannot preform operation, no bones selected")
-            return {"FINISHED"}
-
-        armature = get_armature()
-        created_bones = create_tail_mechanism(armature, selected_bones)
-        select_bones(armature, created_bones)
+        if not self._find_selected_bones():
+            return {"CANCELLED"}
+        
+        created_bones = create_tail_mechanism(self.armature, self.selected_bones)
+        select_bones(self.armature, created_bones)
 
         self.report({"INFO"}, f"{len(created_bones)} bones had been created or updated")
 
@@ -236,16 +218,11 @@ class CreateTentacleChainMechanism(BaseOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        # TODO: Use Names only
-        selected_bones = [o.name for o in bpy.context.selected_bones if o.select]
+        if not self._find_selected_bones():
+            return {"CANCELLED"}
 
-        if not selected_bones:
-            self.report({"ERROR"}, "Cannot preform operation, no bones selected")
-            return {"FINISHED"}
-
-        armature = get_armature()
-        created_bones = create_tentacle_mechanism(armature, selected_bones)
-        select_bones(armature, created_bones)
+        created_bones = create_tentacle_mechanism(self.armature, self.selected_bones)
+        select_bones(self.armature, created_bones)
 
         self.report({"INFO"}, f"{len(created_bones)} bones had been created or updated")
 

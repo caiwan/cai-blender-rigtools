@@ -41,20 +41,26 @@ def _check_target_bones(armature, selected_bones: List[str]) -> List[str]:
 
 
 # TODO: Add typing
-def create_target_armature(armature, selected_bones: List[str]) -> List[str]:
+def create_target_armature(armature, selected_bones: List[str], prefix:str="TGT") -> List[str]:
     selected_bones = _check_target_bones(armature, selected_bones)
 
     bpy.ops.object.mode_set(mode="EDIT")
 
     bone_map = {}
-    # TODO:  Use names for selected bones
     for bone_name in selected_bones:
         bone = find_edit_bone(armature, bone_name)
-        target_bone_name = create_or_update_bone(armature, f"TGT-{bone_name}")
+        target_bone_name = create_or_update_bone(armature, f"{prefix}-{bone_name}")
         target_bone = find_edit_bone(armature, target_bone_name)
 
-        # TODO: proper copy bone
-        # _assign_all_properties(target_bone, bone)
+        # TODO: proper copy bone:
+        # bpy.ops.armature.duplicate()
+        # new_bones = [bone for bone in armature.bones if bone not in selected_bones]
+
+        # for bone in new_bones:
+        #     bone.name = new_name + bone.name
+
+        # Then use at the end:
+        # bpy.context.view_layer.update()
 
         target_bone.head = bone.head
         target_bone.tail = bone.tail
@@ -90,5 +96,7 @@ def create_target_armature(armature, selected_bones: List[str]) -> List[str]:
         constraint.subtarget = target_bone_name
 
     bpy.ops.object.mode_set(mode="EDIT")
+    
+    bpy.context.view_layer.update()
 
-    return [n for n in bone_map.keys()]
+    return [n for n in bone_map.values()]

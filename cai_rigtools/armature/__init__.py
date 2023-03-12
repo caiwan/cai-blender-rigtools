@@ -12,6 +12,8 @@ from .utils import (
     find_edit_bone,
     create_or_update_bone,
     find_axis_vectors,
+    assign_bone_layer_name,
+    move_bones_to_layer,
 )
 
 from .op_target import create_target_armature
@@ -32,6 +34,8 @@ __all__ = [
     "find_edit_bone",
     "create_or_update_bone",
     "find_axis_vectors",
+    "assign_bone_layer_name",
+    "move_bones_to_layer",
     "create_target_armature",
     "create_lever_mechanism",
     "create_tail_mechanism",

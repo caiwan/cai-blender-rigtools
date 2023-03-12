@@ -11,6 +11,7 @@ def get_armature_objects():
     return [o for o in bpy.context.scene.objects if o.type == "ARMATURE"]
 
 
+# TODO: This si not an armature but the currently selected object.
 def get_armature(armature_name=None):
     armature_obj = bpy.context.view_layer.objects.active
     if not armature_name and armature_obj.type == "ARMATURE":
@@ -24,9 +25,9 @@ def get_armature(armature_name=None):
 
 
 def get_selected_bones(armature_obj) -> List[str]:
-    # TODO: Should be queried from the armature object.
-    # return [bone for bone in armature_obj.data.bones if bone.select]
-    return [bone.name for bone in bpy.context.selected_bones]
+    return [bone.name for bone in armature_obj.data.bones if bone.select] or [
+        bone.name for bone in armature_obj.data.edit_bones
+    ]
 
 
 def select_bones(armature, bone_names: List[str], clear_selection: bool = True):
@@ -39,6 +40,8 @@ def select_bones(armature, bone_names: List[str], clear_selection: bool = True):
         bone = armature.data.bones.get(bone_name)
         if bone:
             bone.select = True
+
+    bpy.context.view_layer.update()
 
 
 ## TODO: add Warning if no bone found
@@ -88,36 +91,32 @@ def find_axis_vectors(
     return normal, tangent, bitangent
 
 
-def move_bones_to_layer(armature, bones, layer_num):
+def move_bones_to_layer(armature, bones: List[str], layer_num: int):
     """
-    Selects the bones in the given armature with the given names.
+    Moves given bones to a specified layer
     """
-
     for bone_name in bones:
+        # TODO: Based on the context get edit mode or pose mode bones: 
+        # if context.mode == 'EDIT_ARMATURE' ... 
         bone = find_edit_bone(armature, bone_name)
-        for i in range(len(bone.layers)):
-            if bone.layers[i]:
-                bone.layers[i] = False
+        bone.layers = [i == layer_num for i in range(len(bone.layers))]
 
-        bone.layers[layer_num] = True
+    bpy.context.view_layer.update()
 
 
-def assign_layer_name(armature, layer_name: str) -> int:
+def assign_bone_layer_name(armature, layer_name: str) -> int:
     """
     Finds the first available bone layer of the given armature and assigns
-    the given name to it. Returns the index of the layer.
+    the given name to it. If a layer is already activated without bones assigned,
+    reuses that layer instead. Returns the index of the layer.
     """
-    # Check each bone layer for availability
-    for i in range(32):
-        if not armature.layers[i]:
-            # Activate layers
-            armature.layers[i] = True  # Base bone layer
-            armature.layers[i + 16] = True  # In-between bone layer
-            armature.layers[i + 32] = True  # Tip layer
-            armature.layers[i + 48] = True  # Envelope layer
+    for i in range(len(armature.data.layers)):
+        if not armature.data.layers[i]:
+            armature.data.layers[i] = True
             bpy.context.view_layer.update()
-            armature.layers[i].name = layer_name
+            armature.data[f"layer_name_{i}"] = layer_name
             return i
-
-    # If no layers are available, return None
+        elif not any(bone.layers[i : i + 4] for bone in armature.data.bones):
+            armature.data[f"layer_name_{i}"] = layer_name
+            return i
     return None

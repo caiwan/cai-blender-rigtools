@@ -51,7 +51,6 @@ class MY_MT_RigToolPoseMenu(bpy.types.Menu):
     def draw(self, context):
         for clazz in [
             ClearAllConstraints,
-            BulkToggleDeformation,
         ]:
             if clazz is None:
                 self.layout.separator()
