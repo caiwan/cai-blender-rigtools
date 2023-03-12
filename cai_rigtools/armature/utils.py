@@ -29,20 +29,20 @@ def get_selected_bones(armature_obj) -> List[str]:
     return [bone.name for bone in bpy.context.selected_bones]
 
 
-
 def select_bones(armature, bone_names: List[str], clear_selection: bool = True):
-    # if clear_selection:
-    #     for bone in armature.data.bones:
-    #         bone.select_set(state=0)
+    # bpy.ops.object.mode_set(mode='EDIT') # Should be in edit mode already
 
-    # for bone_name in bone_names:
-    #     bone = armature.data.bones[bone_name]
-    #     bone.select_set(state=0)
+    if clear_selection:
+        bpy.ops.armature.select_all(action="DESELECT")
 
-    return
+    for bone_name in bone_names:
+        bone = armature.data.bones.get(bone_name)
+        if bone:
+            bone.select = True
 
 
- ## TODO: add Warning if no bone found 
+## TODO: add Warning if no bone found
+
 
 def find_edit_bone(armature, bone_name: str):
     return armature.data.edit_bones.get(bone_name, None)
@@ -53,7 +53,8 @@ def find_pose_bone(armature, bone_name: str):
 
 
 def new_bone(obj, bone_name: Optional[str] = None) -> str:
-    """Adds a new bone to the given armature object.
+    """
+    Adds a new bone to the given armature object.
     Returns the resulting bone's name.
     """
     bone_name = bone_name or str(uuid.uuid4())
@@ -73,11 +74,50 @@ create_or_update_bone = new_bone
 
 
 def find_axis_vectors(
-    q: mathutils.Vector, r: mathutils.Vector, s: mathutils.Vector
+    q: mathutils.Vector,
+    r: mathutils.Vector,
+    s: mathutils.Vector,
 ) -> Tuple[mathutils.Vector, mathutils.Vector, mathutils.Vector]:
+    """
+    Finds the three major axis from three arbitrary vectors
+    """
     normal = (r - q).cross(s - q).normalized()
     tangent = (s - r).normalized()
     bitangent = tangent.cross(normal)
 
-    # TODO: Is the vector order right?
     return normal, tangent, bitangent
+
+
+def move_bones_to_layer(armature, bones, layer_num):
+    """
+    Selects the bones in the given armature with the given names.
+    """
+
+    for bone_name in bones:
+        bone = find_edit_bone(armature, bone_name)
+        for i in range(len(bone.layers)):
+            if bone.layers[i]:
+                bone.layers[i] = False
+
+        bone.layers[layer_num] = True
+
+
+def assign_layer_name(armature, layer_name: str) -> int:
+    """
+    Finds the first available bone layer of the given armature and assigns
+    the given name to it. Returns the index of the layer.
+    """
+    # Check each bone layer for availability
+    for i in range(32):
+        if not armature.layers[i]:
+            # Activate layers
+            armature.layers[i] = True  # Base bone layer
+            armature.layers[i + 16] = True  # In-between bone layer
+            armature.layers[i + 32] = True  # Tip layer
+            armature.layers[i + 48] = True  # Envelope layer
+            bpy.context.view_layer.update()
+            armature.layers[i].name = layer_name
+            return i
+
+    # If no layers are available, return None
+    return None

@@ -113,20 +113,19 @@ class MirrorBones(BaseOperator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        selected_bones = [o.name for o in bpy.context.selected_bones]
-
-        if not selected_bones:
-            self.report({"ERROR"}, "Cannot preform operation, no bones selected")
-            return {"FINISHED"}
-
-        armature = get_armature()
+        if not all(
+            [
+                self._find_selected_bones(),
+            ]
+        ):
+            return {"CANCELLED"}
 
         fail = 0
 
         _mirror_map = []
 
-        for bone_name in selected_bones:
-            bone = find_edit_bone(armature, bone_name)
+        for bone_name in self.selected_bones:
+            bone = find_edit_bone(self.armature, bone_name)
             if bone:
                 # Avoid modifying the same bone twice if mirroring is turned on
                 # selection duplicates if any mirroring option was turned on
@@ -138,11 +137,11 @@ class MirrorBones(BaseOperator):
                 fail += 1
 
         if not fail:
-            self.report({"INFO"}, f"{len(selected_bones)} had been mirrored.")
+            self.report({"INFO"}, f"{len(self.selected_bones)} had been mirrored.")
         else:
             self.report(
                 {"WARNING"},
-                f"{len(selected_bones - fail)} had been mirrored. {fail} Bones failed.",
+                f"{len(self.selected_bones - fail)} had been mirrored. {fail} Bones failed.",
             )
 
         return {"FINISHED"}

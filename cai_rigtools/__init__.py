@@ -86,20 +86,16 @@ classes = [
 
 
 def register():
-    from bpy.utils import register_class
-
     for cls in classes:
-        register_class(cls)
+        bpy.utils.register_class(cls)
 
     bpy.types.VIEW3D_MT_edit_armature.append(draw_armature_menu)
     bpy.types.VIEW3D_MT_pose.append(draw_pose_menu)
 
 
 def unregister():
-    from bpy.utils import unregister_class
-
     for cls in classes:
-        unregister_class(cls)
+        bpy.utils.unregister_class(cls)
 
     bpy.types.VIEW3D_MT_edit_armature.remove(draw_armature_menu)
     bpy.types.VIEW3D_MT_pose.remove(draw_pose_menu)
