@@ -1,6 +1,6 @@
 import bpy
 
-from ..armature import (
+from .armature import (
     get_armature,
     find_pose_bone,
     find_edit_bone,
