@@ -12,6 +12,7 @@ from .armature import (
     create_target_armature,
     create_tail_mechanism,
     create_tentacle_mechanism,
+    create_unity_leg_helper,
 )
 
 
@@ -92,7 +93,7 @@ class BulkToggleDeformation(BaseOperator):
 
         for bone_name in self.selected_bones:
             bone = find_edit_bone(self.armature, bone_name)
-            if bone:        
+            if bone:
                 bone.use_deform = self.use_deform
 
         return {"FINISHED"}
@@ -154,12 +155,20 @@ class CreateTargetForArmature(BaseOperator):
         # TODO: Prefix as property
         prefix = "TGT"
 
-        created_bones = create_target_armature(self.armature, self.selected_bones, prefix)
-        target_layer_id = assign_bone_layer_name(self.armature, prefix)
-        move_bones_to_layer(self.armature, created_bones, target_layer_id)
-        select_bones(self.armature, created_bones)
+        try:
+            created_bones = create_target_armature(
+                self.armature, self.selected_bones, prefix
+            )
+            target_layer_id = assign_bone_layer_name(self.armature, prefix)
+            move_bones_to_layer(self.armature, created_bones, target_layer_id)
+            select_bones(self.armature, created_bones)
+        except Exception as e:
+            self.report({"ERROR"}, f"Failed to create target rig: {e}")
+            return {"CANCELLED"}
 
-        self.report({"INFO"}, f"{len(created_bones)} bones had been created or updated.")
+        self.report(
+            {"INFO"}, f"{len(created_bones)} bones had been created or updated."
+        )
 
         return {"FINISHED"}
 
@@ -176,9 +185,13 @@ class CreateBoneChainLeverMechanism(BaseOperator):
     def execute(self, context):
         if not self._find_selected_bones():
             return {"CANCELLED"}
-        
-        created_bones = create_lever_mechanism(self.armature, self.selected_bones)
-        select_bones(self.armature, created_bones)
+
+        try:
+            created_bones = create_lever_mechanism(self.armature, self.selected_bones)
+            select_bones(self.armature, created_bones)
+        except Exception as e:
+            self.report({"ERROR"}, f"Failed to create bone lever rig: {e}")
+            return {"CANCELLED"}
 
         self.report(
             {"INFO"}, f"{len(created_bones)} bones had been created or updated."
@@ -199,9 +212,13 @@ class CreateTailChainMechanism(BaseOperator):
     def execute(self, context):
         if not self._find_selected_bones():
             return {"CANCELLED"}
-        
-        created_bones = create_tail_mechanism(self.armature, self.selected_bones)
-        select_bones(self.armature, created_bones)
+
+        try:
+            created_bones = create_tail_mechanism(self.armature, self.selected_bones)
+            select_bones(self.armature, created_bones)
+        except Exception as e:
+            self.report({"ERROR"}, f"Failed to create tail rig: {e}")
+            return {"CANCELLED"}
 
         self.report({"INFO"}, f"{len(created_bones)} bones had been created or updated")
 
@@ -221,8 +238,39 @@ class CreateTentacleChainMechanism(BaseOperator):
         if not self._find_selected_bones():
             return {"CANCELLED"}
 
-        created_bones = create_tentacle_mechanism(self.armature, self.selected_bones)
-        select_bones(self.armature, created_bones)
+        try:
+            created_bones = create_tentacle_mechanism(
+                self.armature, self.selected_bones
+            )
+            select_bones(self.armature, created_bones)
+        except Exception as e:
+            self.report({"ERROR"}, f"Failed to create tentacle rig: {e}")
+            return {"CANCELLED"}
+
+        self.report({"INFO"}, f"{len(created_bones)} bones had been created or updated")
+
+        return {"FINISHED"}
+
+
+class CreateUnityLegHelper(BaseOperator):
+    """
+    Create a helper for Unity's humanoid rig
+    """
+
+    bl_idname = "rigtools.create_unity_leg_helper"
+    bl_label = "Create Unity leg helper"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        if not self._find_selected_bones():
+            return {"CANCELLED"}
+
+        try:
+            created_bones = create_unity_leg_helper(self.armature, self.selected_bones)
+            select_bones(self.armature, created_bones)
+        except Exception as e:
+            self.report({"ERROR"}, f"Failed to create Unity leg helper: {e}")
+            return {"CANCELLED"}
 
         self.report({"INFO"}, f"{len(created_bones)} bones had been created or updated")
 

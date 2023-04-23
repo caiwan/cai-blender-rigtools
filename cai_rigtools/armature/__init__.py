@@ -20,6 +20,7 @@ from .op_target import create_target_armature
 from .op_lever import create_lever_mechanism
 from .op_tail import create_tail_mechanism
 from .op_tentacle import create_tentacle_mechanism
+from .op_unity_leg_helper import create_unity_leg_helper
 
 from .tree_utils import (
     find_bone_chain,
@@ -40,4 +41,5 @@ __all__ = [
     "create_lever_mechanism",
     "create_tail_mechanism",
     "create_tentacle_mechanism",
+    "create_unity_leg_helper",
 ]

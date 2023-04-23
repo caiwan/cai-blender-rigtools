@@ -23,11 +23,6 @@ from .tree_utils import (
 # TODO: Separate these to individual files as well
 
 
-
-
-
-
-
 def create_lever_mechanism(armature, selected_bones: List[str]) -> List[str]:
     bone_chain = find_bone_chain(armature, selected_bones[0], selected_bones[-1])
 

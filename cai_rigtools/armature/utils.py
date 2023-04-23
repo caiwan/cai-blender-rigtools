@@ -26,7 +26,7 @@ def get_armature(armature_name=None):
 
 def get_selected_bones(armature_obj) -> List[str]:
     return [bone.name for bone in armature_obj.data.bones if bone.select] or [
-        bone.name for bone in armature_obj.data.edit_bones
+        bone.name for bone in armature_obj.data.edit_bones if bone.select 
     ]
 
 

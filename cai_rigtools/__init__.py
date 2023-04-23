@@ -15,6 +15,7 @@ from .operators import (
     CreateTailChainMechanism,
     CreateTentacleChainMechanism,
     BulkToggleDeformation,
+    CreateUnityLegHelper
 )
 
 # ------ Menu
@@ -36,6 +37,7 @@ class MY_MT_RigToolArmatureMenu(bpy.types.Menu):
             CreateTentacleChainMechanism,
             None,
             MirrorBones,
+            CreateUnityLegHelper,
         ]:
             if clazz is None:
                 self.layout.separator()
@@ -81,6 +83,7 @@ classes = [
     CreateTailChainMechanism,
     CreateTentacleChainMechanism,
     BulkToggleDeformation,
+    CreateUnityLegHelper,
 ]
 
 
