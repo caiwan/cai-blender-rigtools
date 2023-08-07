@@ -62,7 +62,7 @@ def create_unity_leg_helper(armature, selected_bones: List[str]) -> List[str]:
     bone_upper_helper.use_connect = bone_upper_leg.use_connect
     bone_upper_helper.parent = bone_upper_leg.parent
 
-    bone_lower_helper.use_connect = True
+    bone_lower_helper.use_connect = False
     bone_lower_helper.parent = bone_upper_helper
 
     bone_foot_helper.use_connect = True
