@@ -2,7 +2,8 @@ from typing import List, Optional, Tuple
 import uuid
 
 import bpy
-import mathutils
+from mathutils import Vector
+
 
 # TODO: Typing
 
@@ -26,12 +27,42 @@ def get_armature(armature_name=None):
 
 def get_selected_bones(armature_obj) -> List[str]:
     return [bone.name for bone in armature_obj.data.bones if bone.select] or [
-        bone.name for bone in armature_obj.data.edit_bones if bone.select 
+        bone.name for bone in armature_obj.data.edit_bones if bone.select
     ]
 
 
 def select_bones(armature, bone_names: List[str], clear_selection: bool = True):
     # bpy.ops.object.mode_set(mode='EDIT') # Should be in edit mode already
+
+    return 
+
+    # TODO: Refer to bone manager [plugin] on how to change selection of bones
+
+    """
+        if context.mode == 'POSE':
+            bones = context.selected_pose_bones
+        else:
+            obs = (
+                # List of selected rigs, starting with the active object (if it's a rig)
+                *[o for o in {obj} if o and o.type == 'ARMATURE'],
+                *[o for o in context.selected_objects
+                  if (o != obj and o.type == 'ARMATURE')],
+            )
+            if context.mode == 'EDIT_ARMATURE':
+                bones = [
+                    b
+                    for o in obs
+                    for b in getattr(o.pose, 'bones', [])
+                    if o.data.edit_bones[f'{b.name}'].select
+                ]
+            else:
+                bones = [
+                    b
+                    for o in obs
+                    for b in getattr(o.pose, 'bones', [])
+                    if b.bone.select
+                ]
+    """
 
     if clear_selection:
         bpy.ops.armature.select_all(action="DESELECT")
@@ -40,6 +71,9 @@ def select_bones(armature, bone_names: List[str], clear_selection: bool = True):
         bone = armature.data.bones.get(bone_name)
         if bone:
             bone.select = True
+
+    armature.data.edit_bones.active = armature.data.edit_bones.get(bone_names[0])
+    armature.select_set(True)
 
     bpy.context.view_layer.update()
 
@@ -77,10 +111,10 @@ create_or_update_bone = new_bone
 
 
 def find_axis_vectors(
-    q: mathutils.Vector,
-    r: mathutils.Vector,
-    s: mathutils.Vector,
-) -> Tuple[mathutils.Vector, mathutils.Vector, mathutils.Vector]:
+    q: Vector,
+    r: Vector,
+    s: Vector,
+) -> Tuple[Vector, Vector, Vector]:
     """
     Finds the three major axis from three arbitrary vectors
     """
@@ -96,8 +130,8 @@ def move_bones_to_layer(armature, bones: List[str], layer_num: int):
     Moves given bones to a specified layer
     """
     for bone_name in bones:
-        # TODO: Based on the context get edit mode or pose mode bones: 
-        # if context.mode == 'EDIT_ARMATURE' ... 
+        # TODO: Based on the context get edit mode or pose mode bones:
+        # if context.mode == 'EDIT_ARMATURE' ...
         bone = find_edit_bone(armature, bone_name)
         bone.layers = [i == layer_num for i in range(len(bone.layers))]
 
@@ -120,3 +154,27 @@ def assign_bone_layer_name(armature, layer_name: str) -> int:
             armature.data[f"layer_name_{i}"] = layer_name
             return i
     return None
+
+
+def find_plane_normal(p1: Vector, p2: Vector, p3: Vector) -> Vector:
+    """
+    Calculate the normal of the plane defined by points p1, p2, and p3.
+    """
+    v1 = p2 - p1
+    v2 = p3 - p1
+    return v1.cross(v2).normalized()
+
+
+def project_point_onto_plane(
+    point: Vector, p1: Vector, p2: Vector, p3: Vector
+) -> Vector:
+    """
+    Project a point onto a plane defined by points p1, p2, and p3 using orthographic projection.
+    """
+    normal = find_plane_normal(p1, p2, p3)
+
+    w = point - p1
+    distance = w.dot(normal)
+
+    projection = point - distance * normal
+    return projection
